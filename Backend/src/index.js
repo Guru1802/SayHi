@@ -1,6 +1,17 @@
 import express from "express"; //provides us featues to build API quickly (eg. routes)
-const app = express()
+import authRoutes from "./routes/auth.route.js";
+import dotenv from "dotenv";
+import {connectDB} from "./lib/db.js";
 
-app.listen(5001, () => {
-    console.log("server is running on port 5001");
+dotenv.config()
+const app = express();
+const PORT = process.env.PORT;
+
+app.use(express.json()) //allows to extract the json data from the body
+
+app.use("/api/auth", authRoutes);
+
+app.listen(PORT, () => {
+    console.log("server is running on PORT:" + PORT);
+    connectDB();
 }) 
