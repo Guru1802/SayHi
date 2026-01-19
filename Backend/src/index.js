@@ -132,7 +132,7 @@ app.use("/api/messages", messageRoutes);
 // -------------------- Serve Frontend (Production) --------------------
 if (process.env.NODE_ENV === "production") {
   // Linux is case-sensitive: Frontend != frontend
-  const clientDistPath = path.join(__dirname, "Frontend", "dist");
+  const clientDistPath = path.join(__dirname, "..", "..", "Frontend", "dist");
 
   app.use(express.static(clientDistPath));
 
