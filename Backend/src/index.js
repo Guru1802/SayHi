@@ -94,24 +94,25 @@ import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
+// -------------------- App Setup --------------------
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// path.resolve() -> repo root on Render (/opt/render/project/src)
-const __dirname = path.resolve();
+// Proper __dirname for ES Modules (REQUIRED on Render)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // -------------------- Middleware --------------------
 app.use(express.json());
 app.use(cookieParser());
 
-// Local dev origins only
+// Local dev only (production is same-origin)
 const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
 
-// Enable CORS in development for Vite dev server.
-// In production (Render), frontend is served by the same origin, so CORS is not needed.
 if (process.env.NODE_ENV !== "production") {
   app.use(
     cors({
@@ -131,12 +132,14 @@ app.use("/api/messages", messageRoutes);
 
 // -------------------- Serve Frontend (Production) --------------------
 if (process.env.NODE_ENV === "production") {
-  // Linux is case-sensitive: Frontend != frontend
+  // Backend/src → repo root → Frontend/dist
   const clientDistPath = path.join(__dirname, "..", "..", "Frontend", "dist");
+
+  console.log("Serving frontend from:", clientDistPath);
 
   app.use(express.static(clientDistPath));
 
-  // SPA fallback — avoids Express "*" route parsing issues
+  // SPA fallback (safe for Express + path-to-regexp)
   app.get(/^(?!\/api).*/, (req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
@@ -146,7 +149,6 @@ if (process.env.NODE_ENV === "production") {
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  // For local dev, allow Vite origins. In production same-origin will work.
   cors: {
     origin: allowedOrigins,
     credentials: true,
